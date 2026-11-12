@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>madeforayah.vercel.app</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050014;color:#fff;font-family:Arial,sans-serif;overflow:hidden;height:100vh}
+canvas{position:fixed;inset:0;z-index:0}
+.stage{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.big{font-size:64px;font-weight:900;color:#ff8fc7;text-shadow:0 0 20px #ff5da2;animation:pop .6s both}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.count{font-size:130px;font-weight:900;color:#ff8fc7;text-shadow:0 0 30px #ff5da2}
+.heart-big{font-size:130px;animation:pop .6s both}
+.stars{position:fixed;inset:0;background:#050014;z-index:1}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 2s infinite}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+.cat{font-size:90px}
+.balloons{font-size:22px;color:#ffeb3b;font-weight:900}
+.card{width:300px;height:420px;background:#fff;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;cursor:pointer}
+.hands{font-size:90px}
+.card p{margin-top:10px;font-size:14px;color:#888}
+.album{width:100%;max-width:420px;animation:pop .5s both}
+.banner{background:#fff7f7;color:#d67a8a;padding:14px 18px;border-radius:20px;font-family:Georgia,serif;font-style:italic;font-size:20px;margin-bottom:16px}
+.photos{display:flex;gap:8px;justify-content:center}
+.photos img{width:48%;height:280px;object-fit:cover;border-radius:12px;border:4px solid #fff;background:#ff8fc7}
+.btn{margin-top:20px;padding:12px 28px;background:#ff5da2;border:none;border-radius:30px;color:#fff;font-size:16px;cursor:pointer}
+.heart-stage{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center}
+.polaroid{position:absolute;width:88px;height:108px;background:#fff;padding:6px 6px 22px;border-radius:8px;box-shadow:0 0 14px #ff8fc7;opacity:0;transform:translate(0,0) scale(0);transition:all .8s cubic-bezier(.2,1.4,.4,1)}
+.polaroid img{width:100%;height:100%;object-fit:cover;background:#ff8fc7}
+.polaroid.show{opacity:1}
+.float-heart{position:fixed;z-index:6;pointer-events:none;animation:floatUp 4s linear forwards}
+@keyframes floatUp{to{transform:translateY(-110vh);opacity:0}}
+.music-btn{position:fixed;top:16px;right:16px;z-index:100;width:48px;height:48px;border-radius:50%;background:#ff5da2;border:2px solid #fff;font-size:22px;cursor:pointer;box-shadow:0 0 15px #ff5da2}
+.music-btn.playing{animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:480px){
+.polaroid{width:54px;height:68px;padding:3px 3px 11px;border-radius:5px}
+.photos img{height:210px}
+.big{font-size:48px}
+.count{font-size:100px}
+.heart-big{font-size:100px}
+.card{width:270px;height:380px}
+}
+</style>
+</head>
+<body>
+<audio id="song" loop preload="auto"><source src="song.mp3" type="audio/mpeg"><source src="song.m4a" type="audio/mp4"></audio>
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵</button>
+<canvas id="matrix"></canvas>
+<div id="stars" class="stars" style="display:none"></div>
+<div class="stage" id="stage"></div>
+<script>
+var song=document.getElementById('song');
+var musicBtn=document.getElementById('musicBtn');
+var isPlaying=false;
+function toggleMusic(){
+  if(isPlaying){ song.pause(); musicBtn.classList.remove('playing'); musicBtn.innerHTML='🔇'; isPlaying=false; }
+  else { song.play(); musicBtn.classList.add('playing'); musicBtn.innerHTML='🎵'; isPlaying=true; }
+}
+document.addEventListener('click', function(){ if(!isPlaying){ song.play().catch(function(){}); musicBtn.classList.add('playing'); isPlaying=true; } });
+function smartImg(img, base){
+  var tries = [base + '.jpg', base + '.jpeg', base + '.png', base + '.JPG', base + '.JPEG'];
+  var i = 0;
+  img.onerror = function(){ i++; if(i < tries.length){ img.src = tries[i]; } else { img.onerror = null; } };
+  img.src = tries[0];
+}
+const starsEl=document.getElementById('stars');
+for(let i=0;i<120;i++){let s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.width=s.style.height=(Math.random()*2+1)+'px';s.style.animationDelay=(Math.random()*2)+'s';starsEl.appendChild(s);}
+const canvas=document.getElementById('matrix');const ctx=canvas.getContext('2d');
+canvas.width=innerWidth;canvas.height=innerHeight;
+const chars="AYAH01";let drops=[];
+for(let i=0;i<100;i++) drops[i]=Math.random()*-50;
+function draw(){
+ctx.fillStyle="rgba(5,0,20,0.12)";ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#ff5da2";ctx.font="15px monospace";
+for(let i=0;i<drops.length;i++){const t=chars[Math.floor(Math.random()*chars.length)];ctx.fillText(t,i*16,drops[i]*16);if(drops[i]*16>canvas.height && Math.random()>0.98) drops[i]=0;drops[i]++;}
+}
+let matrixInt=setInterval(draw,50);
+const stage=document.getElementById('stage');
+function showText(txt,cls){stage.innerHTML='<div class="'+(cls||'big')+'">'+txt+'</div>';}
+let n=3;showText(n,'count');
+let iv=setInterval(function(){
+n--;if(n>0){showText(n,'count');}else{clearInterval(iv);
+let words=['HAPPY','BIRTHDAY','TO','AYAH'];let wi=0;showText(words[0]);
+let wInt=setInterval(function(){wi++;if(wi<words.length){showText(words[wi]);}else{clearInterval(wInt);showText('💖','heart-big');setTimeout(showCat,1200);}},900);}
+},900);
+function showCat(){clearInterval(matrixInt);canvas.style.display='none';starsEl.style.display='block';stage.innerHTML='<div style="animation:pop .6s both"><div class="balloons">🎈 HAPPY 🎈<br>🎈 BIRTHDAY 🎈</div><div class="cat">🐱</div><div>💖</div></div>';setTimeout(showCard,2200);}
+function showCard(){stage.innerHTML='<div class="card" onclick="openAlbum()"><div class="hands">🤲❤️🤲</div><p>Tap to open 💌</p></div>';}
+function openAlbum(){
+  stage.innerHTML='<div class="album"><div class="banner">Happy Birthday Ayah 💕</div><div class="photos"><img id="p1"><img id="p2"></div><button class="btn" onclick="openAlbum2()">Next ➜</button></div>';
+  smartImg(document.getElementById('p1'),'aya1');
+  smartImg(document.getElementById('p2'),'aya2');
+}
+function openAlbum2(){
+  stage.innerHTML='<div class="album"><div class="banner" style="font-size:17px">As long as you are smiling, I am happy. Stay happy, my love 💕</div><div class="photos"><img id="p3"><img id="p4"></div><button class="btn" onclick="showHeart()">Tap for surprise 💝</button></div>';
+  smartImg(document.getElementById('p3'),'aya3');
+  smartImg(document.getElementById('p4'),'aya4');
+}
+function showHeart(){
+stage.style.display='none';
+// 18 صورة - زدنا واحدة بس
+var bases=["aya1","aya2","aya3","aya4","aya5","aya6","aya7","aya8","aya9","aya10","aya11","aya12","aya1","aya2","aya3","aya4","aya5","aya6"];
+var pos=[];
+var total = bases.length;
+for(var i=0;i<total;i++){
+  var t = (i/total)*Math.PI*2 + 0.3;
+  var hx = 16*Math.pow(Math.sin(t),3);
+  var hy = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+  pos.push({x: hx*10, y: -hy*10, r: (Math.random()*16-8)});
+}
+var scale = Math.min(window.innerWidth / 380, window.innerHeight / 580);
+if(scale > 1) scale = 1;
+var marginX = window.innerWidth < 480 ? -27 : -44;
+var marginY = window.innerWidth < 480 ? -34 : -54;
+var box=document.createElement('div');box.className='heart-stage';document.body.appendChild(box);
+pos.forEach(function(p,i){
+  var d=document.createElement('div');d.className='polaroid';
+  var im=document.createElement('img');smartImg(im, bases[i]);d.appendChild(im);
+  d.style.left='50%';d.style.top='50%';d.style.marginLeft=marginX+'px';d.style.marginTop=marginY+'px';box.appendChild(d);
+  setTimeout(function(){d.classList.add('show');d.style.transform='translate('+(p.x*scale)+'px,'+(p.y*scale)+'px) rotate('+p.r+'deg) scale(1)';},100+i*130);
+});
+setInterval(function(){var h=document.createElement('div');h.className='float-heart';h.innerHTML='❤️';h.style.left=Math.random()*100+'vw';h.style.top='100vh';h.style.fontSize=(12+Math.random()*14)+'px';document.body.appendChild(h);setTimeout(function(){h.remove()},4000);},600);
+}
+</script>
+</body>
+</html>
