@@ -46,8 +46,8 @@ canvas{position:fixed;inset:0;z-index:0}
 </style>
 </head>
 <body>
-<audio id="song" loop preload="auto"><source src="song.mp3" type="audio/mpeg"><source src="song.m4a" type="audio/mp4"></audio>
-<button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵</button>
+<audio id="song" loop preload="auto" src="song.mp3?v=2"></audio>
+<button class="music-btn" id="musicBtn">🎵</button>
 <canvas id="matrix"></canvas>
 <div id="stars" class="stars" style="display:none"></div>
 <div class="stage" id="stage"></div>
@@ -55,11 +55,25 @@ canvas{position:fixed;inset:0;z-index:0}
 var song=document.getElementById('song');
 var musicBtn=document.getElementById('musicBtn');
 var isPlaying=false;
-function toggleMusic(){
-  if(isPlaying){ song.pause(); musicBtn.classList.remove('playing'); musicBtn.innerHTML='🔇'; isPlaying=false; }
-  else { song.play(); musicBtn.classList.add('playing'); musicBtn.innerHTML='🎵'; isPlaying=true; }
+function toggleMusic(e){
+  if(e) e.stopPropagation();
+  if(isPlaying){
+    song.pause();
+    musicBtn.classList.remove('playing');
+    musicBtn.innerHTML='🔇';
+    isPlaying=false;
+  } else {
+    song.play().then(function(){
+      musicBtn.classList.add('playing');
+      musicBtn.innerHTML='🎵';
+      isPlaying=true;
+    }).catch(function(err){
+      alert('الأغنية ما لقت الملف، اتأكد انو song.mp3 موجود');
+    });
+  }
 }
-document.addEventListener('click', function(){ if(!isPlaying){ song.play().catch(function(){}); musicBtn.classList.add('playing'); isPlaying=true; } });
+musicBtn.addEventListener('click', toggleMusic);
+song.addEventListener('error', function(){ console.log('Audio load error'); });
 function smartImg(img, base){
   var tries = [base + '.jpg', base + '.jpeg', base + '.png', base + '.JPG', base + '.JPEG'];
   var i = 0;
@@ -100,7 +114,6 @@ function openAlbum2(){
 }
 function showHeart(){
 stage.style.display='none';
-// 18 صورة - زدنا واحدة بس
 var bases=["aya1","aya2","aya3","aya4","aya5","aya6","aya7","aya8","aya9","aya10","aya11","aya12","aya1","aya2","aya3","aya4","aya5","aya6"];
 var pos=[];
 var total = bases.length;
